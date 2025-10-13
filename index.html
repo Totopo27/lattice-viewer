@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualizador de Retículas - Lattice Viewer</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="dark">
+    <div class="container">
+        <div class="sidebar">
+            <div class="header">
+                <div class="header-text">
+                    <h1>Visualizador de Retículas</h1>
+                    <p class="subtitle">(Lattice Viewer)</p>
+                </div>
+                <button class="theme-toggle" id="themeToggle" title="Cambiar tema">OSCURO</button>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Escalas Predefinidas</div>
+                <div class="preset-grid">
+                    <button class="preset-btn" data-preset="just">Just 7-limit</button>
+                    <button class="preset-btn" data-preset="ptolemy">Ptolemy</button>
+                    <button class="preset-btn active" data-preset="custom">Custom</button>
+                    <button class="preset-btn" data-preset="harmonic">Harmonic 8-16</button>
+                    <button class="preset-btn" data-preset="eikosany">Eikosany</button>
+                    <button class="preset-btn" data-preset="hexany">Hexany 1357</button>
+                </div>
+                <button class="btn-primary" id="editScaleBtn">Editar Escala</button>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Visualización</div>
+                <div class="control-label">Tipo de etiquetas</div>
+                <div class="radio-group">
+                    <div class="radio-option">
+                        <input type="radio" name="textType" id="ratioType" value="ratio" checked>
+                        <label for="ratioType">Ratios</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" name="textType" id="factorType" value="factors">
+                        <label for="factorType">Factores</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" name="textType" id="centsType" value="cents">
+                        <label for="centsType">Cents</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Sistema de Proyección</div>
+                <div class="radio-group">
+                    <div class="radio-option">
+                        <input type="radio" name="projectionType" id="baseProjection" value="base" checked>
+                        <label for="baseProjection">Wilson</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" name="projectionType" id="orthoProjection" value="orthogonal">
+                        <label for="orthoProjection">Ortogonal</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Esquema de Color</div>
+                <div class="color-scheme">
+                    <div class="color-option active" data-color="white" style="background: #ffffff;"></div>
+                    <div class="color-option" data-color="rainbow" style="background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);"></div>
+                    <div class="color-option" data-color="warm" style="background: linear-gradient(135deg, #f093fb, #f5576c);"></div>
+                    <div class="color-option" data-color="cool" style="background: linear-gradient(135deg, #4facfe, #00f2fe);"></div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Controles de Vista</div>
+                <div class="control-group">
+                    <label class="control-label">
+                        <span>Nivel de zoom</span>
+                        <span class="value-display" id="zoomValue">80%</span>
+                    </label>
+                    <input type="range" id="zoomSlider" min="20" max="200" value="80">
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">
+                        <span>Tamaño de puntos</span>
+                        <span class="value-display" id="pointSizeValue">4</span>
+                    </label>
+                    <input type="range" id="pointSizeSlider" min="1" max="10" step="0.5" value="4">
+                </div>
+
+                <div class="control-group">
+                    <label class="control-label">
+                        <span>Grosor de líneas</span>
+                        <span class="value-display" id="lineWidthValue">0.8</span>
+                    </label>
+                    <input type="range" id="lineWidthSlider" min="0.1" max="3" step="0.1" value="0.8">
+                </div>
+
+                <div class="control-group">
+                    <label class="control-label">
+                        <span>Tamaño de texto</span>
+                        <span class="value-display" id="textSizeValue">11</span>
+                    </label>
+                    <input type="range" id="textSizeSlider" min="4" max="16" step="0.5" value="11">
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Opciones</div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="showGrid" checked>
+                    <label for="showGrid">Mostrar cuadrícula</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="showLabels" checked>
+                    <label for="showLabels">Mostrar etiquetas</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="showConnections" checked>
+                    <label for="showConnections">Mostrar conexiones</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="strictConnections" checked>
+                    <label for="strictConnections">Conexiones por paso primo único</label>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Análisis Teórico</div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="noteCount">0</div>
+                        <div class="stat-label">Notas</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="edgeCount">0</div>
+                        <div class="stat-label">Conexiones</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="primeLimit">-</div>
+                        <div class="stat-label">Límite Primo</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="dimensionality">-</div>
+                        <div class="stat-label">Dimensiones</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-expandable">
+                <div class="section-header" id="advancedHeader">
+                    <span class="section-header-title">Avanzado</span>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="section-content" id="advancedContent">
+                    <button class="btn-secondary" id="analyzeETBtn">Comparar con ET</button>
+                    <button class="btn-secondary" id="intervalTableBtn">Tabla de Intervalos</button>
+                    <button class="btn-secondary" id="detectStructuresBtn">Detectar Estructuras</button>
+                    <button class="btn-secondary" id="exportBtn">Exportar</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="canvas-container">
+            <canvas id="latticeCanvas"></canvas>
+            <div class="canvas-info">
+                Arrastra para mover • Scroll para zoom
+            </div>
+            <div class="canvas-controls">
+                <button class="canvas-btn" id="resetViewBtn" title="Resetear vista">↻</button>
+                <button class="canvas-btn" id="exportImageBtn" title="Exportar imagen">↓</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal: Editar Escala -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <h2>Editar Escala</h2>
+            <p class="modal-subtitle">Ingresa un ratio por línea (ej: 3/2, 5/4, 9/8)</p>
+            <textarea id="scaleInput" placeholder="3/2&#10;5/4&#10;4/3&#10;9/8&#10;15/8&#10;2/1"></textarea>
+            <div class="modal-buttons">
+                <button class="cancel-btn" id="cancelBtn">Cancelar</button>
+                <button class="btn-primary" id="createLatticeBtn">Aplicar Cambios</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Comparación ET -->
+    <div id="etModal" class="modal">
+        <div class="modal-content">
+            <h2>Comparación con Temperamento Igual</h2>
+            <p class="modal-subtitle">Aproximación de cada nota a sistemas ET comunes</p>
+            <div id="etResults"></div>
+            <div class="modal-buttons">
+                <button class="btn-primary" id="closeETBtn">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Tabla de Intervalos -->
+    <div id="intervalModal" class="modal">
+        <div class="modal-content">
+            <h2>Tabla de Intervalos</h2>
+            <p class="modal-subtitle">Todos los intervalos entre notas de la escala</p>
+            <div id="intervalResults"></div>
+            <div class="modal-buttons">
+                <button class="btn-primary" id="closeIntervalBtn">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Estructuras Detectadas -->
+    <div id="structureModal" class="modal">
+        <div class="modal-content">
+            <h2>Estructuras Armónicas Detectadas</h2>
+            <p class="modal-subtitle">Tríadas, tetradas y otras estructuras en la escala</p>
+            <div id="structureResults"></div>
+            <div class="modal-buttons">
+                <button class="btn-primary" id="closeStructureBtn">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Exportar -->
+    <div id="exportModal" class="modal">
+        <div class="modal-content">
+            <h2>Exportar Escala</h2>
+            <p class="modal-subtitle">Selecciona el formato de exportación</p>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <button class="btn-primary" id="exportScalaBtn" style="margin: 0;">
+                    Exportar como Scala (.scl)
+                </button>
+                <button class="btn-primary" id="exportTxtBtn" style="margin: 0;">
+                    Exportar como Texto (.txt)
+                </button>
+            </div>
+            <div class="modal-buttons">
+                <button class="cancel-btn" id="cancelExportBtn">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/script.js"></script>
+</body>
+</html>
