@@ -578,4 +578,346 @@ function init() {
     try {
         const ratios = state.scaleString.split(/\s+/).filter(r => r.trim());
         state.latticeData = ratiosToLatticeData(ratios);
-        drawLattice
+        drawLattice();
+        updateStats();
+    } catch (e) {
+        console.error('Error al inicializar:', e);
+        alert('Error al cargar la escala: ' + e.message);
+    }
+}
+
+// ===== FUNCIONES DE MODALES =====
+
+function analyzeET() {
+    if (!state.latticeData) return;
+    
+    const etSystems = [12, 19, 22, 24, 31, 41, 53];
+    let html = '<div style="color: #333;">';
+    
+    state.latticeData.data.forEach(point => {
+        html += `<div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">`;
+        html += `<strong style="color: #7e22ce; font-size: 16px;">${point.ratio}</strong> (${Math.round(point.cents)}¢)<br>`;
+        html += `<div style="margin-top: 10px; font-size: 13px;">`;
+        
+        etSystems.forEach(et => {
+            const mapping = mapToET(point.ratio, et);
+            const errorStr = mapping.error < 5 ? 
+                `<span style="color: #059669;">±${mapping.error.toFixed(2)}¢</span>` :
+                `<span style="color: #dc2626;">±${mapping.error.toFixed(2)}¢</span>`;
+            html += `${et}-ET: grado ${mapping.degree} ${errorStr}<br>`;
+        });
+        
+        html += `</div></div>`;
+    });
+    
+    html += '</div>';
+    document.getElementById('etResults').innerHTML = html;
+    document.getElementById('etModal').classList.add('active');
+}
+
+function showIntervalTable() {
+    const intervals = calculateIntervals();
+    
+    let html = '<div style="color: #333; max-height: 500px; overflow-y: auto;">';
+    html += '<table class="interval-table">';
+    html += '<thead><tr><th>Desde</th><th>Hasta</th><th>Cents</th><th>Ratio</th></tr></thead>';
+    html += '<tbody>';
+    
+    intervals.forEach(interval => {
+        html += `<tr>
+            <td>${interval.from}</td>
+            <td>${interval.to}</td>
+            <td>${Math.round(interval.cents)}¢</td>
+            <td>${interval.ratio}</td>
+        </tr>`;
+    });
+    
+    html += '</tbody></table></div>';
+    document.getElementById('intervalResults').innerHTML = html;
+    document.getElementById('intervalModal').classList.add('active');
+}
+
+function showStructures() {
+    const { triads, tetrads } = detectStructures();
+    
+    let html = '<div style="color: #333;">';
+    
+    if (triads.length > 0) {
+        html += '<div class="analysis-section">';
+        html += '<h3>Tríadas Detectadas</h3>';
+        html += '<ul class="structure-list">';
+        triads.forEach(triad => {
+            html += `<li class="structure-item">
+                <strong>${triad.type}</strong>
+                ${triad.notes.join(' - ')}
+            </li>`;
+        });
+        html += '</ul></div>';
+    }
+    
+    if (tetrads.length > 0) {
+        html += '<div class="analysis-section">';
+        html += '<h3>Tetradas Detectadas</h3>';
+        html += '<ul class="structure-list">';
+        tetrads.forEach(tetrad => {
+            html += `<li class="structure-item">
+                <strong>${tetrad.type}</strong>
+                ${tetrad.notes.join(' - ')}
+            </li>`;
+        });
+        html += '</ul></div>';
+    }
+    
+    if (triads.length === 0 && tetrads.length === 0) {
+        html += '<p style="padding: 20px; text-align: center; color: #666;">No se detectaron estructuras armónicas comunes en esta escala.</p>';
+    }
+    
+    html += '</div>';
+    document.getElementById('structureResults').innerHTML = html;
+    document.getElementById('structureModal').classList.add('active');
+}
+
+// ===== TOGGLE TEMA =====
+function toggleTheme() {
+    state.theme = state.theme === 'dark' ? 'light' : 'dark';
+    document.body.className = state.theme;
+    document.getElementById('themeToggle').textContent = state.theme === 'dark' ? 'OSCURO' : 'CLARO';
+    drawLattice();
+}
+
+// ===== EVENT LISTENERS =====
+
+document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
+// Toggle sección Avanzado
+document.getElementById('advancedHeader').addEventListener('click', () => {
+    const content = document.getElementById('advancedContent');
+    const icon = document.querySelector('#advancedHeader .expand-icon');
+    
+    if (content.classList.contains('expanded')) {
+        content.classList.remove('expanded');
+        icon.classList.remove('expanded');
+    } else {
+        content.classList.add('expanded');
+        icon.classList.add('expanded');
+    }
+});
+
+document.querySelectorAll('.preset-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.scaleString = presets[btn.dataset.preset];
+        state.panX = 0;
+        state.panY = 0;
+        state.zoom = 0.8;
+        document.getElementById('zoomSlider').value = 80;
+        document.getElementById('zoomValue').textContent = '80%';
+        init();
+    });
+});
+
+document.getElementById('editScaleBtn').addEventListener('click', () => {
+    document.getElementById('scaleInput').value = state.scaleString;
+    document.getElementById('modal').classList.add('active');
+});
+
+document.getElementById('analyzeETBtn').addEventListener('click', analyzeET);
+document.getElementById('intervalTableBtn').addEventListener('click', showIntervalTable);
+document.getElementById('detectStructuresBtn').addEventListener('click', showStructures);
+
+// Abrir modal de exportación
+document.getElementById('exportBtn').addEventListener('click', () => {
+    document.getElementById('exportModal').classList.add('active');
+});
+
+// Botones de exportación
+document.getElementById('exportScalaBtn').addEventListener('click', exportToScala);
+document.getElementById('exportTxtBtn').addEventListener('click', exportToTxt);
+document.getElementById('cancelExportBtn').addEventListener('click', () => {
+    document.getElementById('exportModal').classList.remove('active');
+});
+
+document.getElementById('cancelBtn').addEventListener('click', () => {
+    document.getElementById('modal').classList.remove('active');
+});
+
+document.getElementById('closeETBtn').addEventListener('click', () => {
+    document.getElementById('etModal').classList.remove('active');
+});
+
+document.getElementById('closeIntervalBtn').addEventListener('click', () => {
+    document.getElementById('intervalModal').classList.remove('active');
+});
+
+document.getElementById('closeStructureBtn').addEventListener('click', () => {
+    document.getElementById('structureModal').classList.remove('active');
+});
+
+document.getElementById('createLatticeBtn').addEventListener('click', () => {
+    try {
+        state.scaleString = document.getElementById('scaleInput').value;
+        init();
+        document.getElementById('modal').classList.remove('active');
+        document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+    } catch (e) {
+        alert('Error: ' + e.message);
+    }
+});
+
+document.querySelectorAll('input[name="textType"]').forEach(radio => {
+    radio.addEventListener('change', (e) => {
+        state.textType = e.target.value;
+        drawLattice();
+    });
+});
+
+document.querySelectorAll('input[name="projectionType"]').forEach(radio => {
+    radio.addEventListener('change', () => {
+        state.projectionType = document.querySelector('input[name="projectionType"]:checked').value;
+        init();
+    });
+});
+
+document.getElementById('zoomSlider').addEventListener('input', (e) => {
+    state.zoom = e.target.value / 100;
+    document.getElementById('zoomValue').textContent = e.target.value + '%';
+    drawLattice();
+});
+
+document.getElementById('pointSizeSlider').addEventListener('input', (e) => {
+    state.pointSize = parseFloat(e.target.value);
+    document.getElementById('pointSizeValue').textContent = e.target.value;
+    drawLattice();
+});
+
+document.getElementById('lineWidthSlider').addEventListener('input', (e) => {
+    state.lineWidth = parseFloat(e.target.value);
+    document.getElementById('lineWidthValue').textContent = e.target.value;
+    drawLattice();
+});
+
+document.getElementById('textSizeSlider').addEventListener('input', (e) => {
+    state.textSize = parseFloat(e.target.value);
+    document.getElementById('textSizeValue').textContent = e.target.value;
+    drawLattice();
+});
+
+document.getElementById('showGrid').addEventListener('change', (e) => {
+    state.showGrid = e.target.checked;
+    drawLattice();
+});
+
+document.getElementById('showLabels').addEventListener('change', (e) => {
+    state.showLabels = e.target.checked;
+    drawLattice();
+});
+
+document.getElementById('showConnections').addEventListener('change', (e) => {
+    state.showConnections = e.target.checked;
+    drawLattice();
+});
+
+document.getElementById('strictConnections').addEventListener('change', (e) => {
+    state.strictConnections = e.target.checked;
+    init();
+});
+
+document.querySelectorAll('.color-option').forEach(option => {
+    option.addEventListener('click', () => {
+        document.querySelectorAll('.color-option').forEach(o => o.classList.remove('active'));
+        option.classList.add('active');
+        state.colorScheme = option.dataset.color;
+        drawLattice();
+    });
+});
+
+document.getElementById('resetViewBtn').addEventListener('click', () => {
+    state.panX = 0;
+    state.panY = 0;
+    state.zoom = 0.8;
+    document.getElementById('zoomSlider').value = 80;
+    document.getElementById('zoomValue').textContent = '80%';
+    drawLattice();
+});
+
+document.getElementById('exportImageBtn').addEventListener('click', () => {
+    const link = document.createElement('a');
+    const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+    link.download = `lattice_${timestamp}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+});
+
+canvas.addEventListener('pointerdown', (e) => {
+    state.isDragging = true;
+    state.lastX = e.clientX;
+    state.lastY = e.clientY;
+});
+
+canvas.addEventListener('pointermove', (e) => {
+    if (state.isDragging) {
+        state.panX += e.clientX - state.lastX;
+        state.panY += e.clientY - state.lastY;
+        state.lastX = e.clientX;
+        state.lastY = e.clientY;
+        drawLattice();
+    }
+});
+
+canvas.addEventListener('pointerup', () => {
+    state.isDragging = false;
+});
+
+canvas.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    
+    const oldZoom = state.zoom;
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    state.zoom = Math.max(0.2, Math.min(2, state.zoom * delta));
+    
+    const zoomRatio = state.zoom / oldZoom;
+    state.panX = mouseX - (mouseX - state.panX) * zoomRatio;
+    state.panY = mouseY - (mouseY - state.panY) * zoomRatio;
+    
+    document.getElementById('zoomSlider').value = Math.round(state.zoom * 100);
+    document.getElementById('zoomValue').textContent = Math.round(state.zoom * 100) + '%';
+    drawLattice();
+}, { passive: false });
+
+window.addEventListener('resize', drawLattice);
+
+document.getElementById('modal').addEventListener('click', (e) => {
+    if (e.target.id === 'modal') {
+        document.getElementById('modal').classList.remove('active');
+    }
+});
+
+document.getElementById('etModal').addEventListener('click', (e) => {
+    if (e.target.id === 'etModal') {
+        document.getElementById('etModal').classList.remove('active');
+    }
+});
+
+document.getElementById('intervalModal').addEventListener('click', (e) => {
+    if (e.target.id === 'intervalModal') {
+        document.getElementById('intervalModal').classList.remove('active');
+    }
+});
+
+document.getElementById('structureModal').addEventListener('click', (e) => {
+    if (e.target.id === 'structureModal') {
+        document.getElementById('structureModal').classList.remove('active');
+    }
+});
+
+document.getElementById('exportModal').addEventListener('click', (e) => {
+    if (e.target.id === 'exportModal') {
+        document.getElementById('exportModal').classList.remove('active');
+    }
+});
+
+init();
