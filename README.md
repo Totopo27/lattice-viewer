@@ -110,9 +110,4 @@ Inspirado por el trabajo de:
 
 Basado en el trabajo original de [erv-web](https://github.com/diegovdc/erv-web).
 
-## Contacto
-
-- Reportar bugs: [GitHub Issues](https://github.com/tu-usuario/lattice-viewer/issues)
-- Discusión: [GitHub Discussions](https://github.com/tu-usuario/lattice-viewer/discussions)
-
 ---
