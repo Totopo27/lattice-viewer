@@ -31,14 +31,7 @@ Herramienta para visualizar y analizar escalas microtonales usando retículas (l
 - **Formato texto (.txt)**: Análisis completo legible
 - **Imagen PNG** (trabajo en proceso): Captura del lattice visual
 
-## Inicio Rápido
-
-### Uso Online
-Simplemente abre `index.html` en tu navegador.
-
 ## Guía de Uso
-
-### Crear una Escala Personalizada
 
 1. Haz clic en **"Editar Escala"**
 2. Ingresa ratios, uno por línea (ej: `3/2`, `5/4`, `9/8`)
@@ -68,10 +61,6 @@ Simplemente abre `index.html` en tu navegador.
 - **Paso primo único**: Solo conecta notas que difieren en un factor primo
 - **Flexible**: Conecta notas con complejidad factorial similar
 
-### Temas
-
-- **Oscuro**: Fondo degradado azul-púrpura
-- **Claro**: Fondo suave y limpio
 
 ## Conceptos Teóricos
 
@@ -86,33 +75,3 @@ Un lattice representa ratios de frecuencia como puntos en un espacio multidimens
 ### Límite Primo
 El número primo más grande usado en la factorización de todos los ratios de la escala.
 
-## Contribuir
-
-Las contribuciones son bienvenidas. Por favor:
-
-1. Fork el proyecto
-2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
-3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
-5. Abre un Pull Request
-
-## Licencia
-
-Este proyecto está bajo la Licencia MIT. Ver `LICENSE` para más detalles.
-
-## Créditos
-
-Inspirado por el trabajo de:
-- **Erv Wilson**: Teoría de lattices y combinatorial product sets
-- **Harry Partch**: Pionero de la microtonalidad
-
-## Atribución
-
-Basado en el trabajo original de [erv-web](https://github.com/diegovdc/erv-web).
-
-## Contacto
-
-- Reportar bugs: [GitHub Issues](https://github.com/tu-usuario/lattice-viewer/issues)
-- Discusión: [GitHub Discussions](https://github.com/tu-usuario/lattice-viewer/discussions)
-
----
