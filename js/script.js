@@ -2,10 +2,10 @@
 const PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23];
 
 const baseCoords = {
-    1: {x: 0, y: 0}, 2: {x: 0, y: 0}, 3: {x: 40, y: 0},
-    5: {x: 0, y: -40}, 7: {x: 13, y: -11}, 11: {x: -14, y: -18},
-    13: {x: -8, y: -4}, 17: {x: -5, y: -32}, 19: {x: 7, y: -25},
-    23: {x: 20, y: -6}
+    1: { x: 0, y: 0 }, 2: { x: 0, y: 0 }, 3: { x: 40, y: 0 },
+    5: { x: 0, y: -40 }, 7: { x: 13, y: -11 }, 11: { x: -14, y: -18 },
+    13: { x: -8, y: -4 }, 17: { x: -5, y: -32 }, 19: { x: 7, y: -25 },
+    23: { x: 20, y: -6 }
 };
 
 // ===== PRESETS MICROTONALES =====
@@ -65,14 +65,14 @@ function parseRatio(ratioStr) {
     if (parts.length === 1) {
         const num = parseInt(parts[0]);
         if (isNaN(num) || num <= 0) throw new Error('Ratio inválido: ' + ratioStr);
-        return {num, den: 1};
+        return { num, den: 1 };
     }
     const num = parseInt(parts[0]);
     const den = parseInt(parts[1]);
     if (isNaN(num) || isNaN(den) || num <= 0 || den <= 0) {
         throw new Error('Ratio inválido: ' + ratioStr);
     }
-    return {num, den};
+    return { num, den };
 }
 
 function ratioToCents(num, den) {
@@ -82,15 +82,15 @@ function ratioToCents(num, den) {
 function getPrimeVector(numerFactors, denomFactors) {
     const vector = {};
     PRIMES.forEach(p => vector[p] = 0);
-    
+
     numerFactors.forEach(factor => {
         if (vector[factor] !== undefined) vector[factor]++;
     });
-    
+
     denomFactors.forEach(factor => {
         if (vector[factor] !== undefined) vector[factor]--;
     });
-    
+
     return vector;
 }
 
@@ -123,7 +123,7 @@ function orthogonalProjection(primeVector) {
     let x = 0, y = 0;
     const primes = PRIMES.slice(1);
     const angleStep = (2 * Math.PI) / primes.length;
-    
+
     primes.forEach((prime, index) => {
         const exp = primeVector[prime];
         const angle = index * angleStep;
@@ -131,8 +131,8 @@ function orthogonalProjection(primeVector) {
         x += exp * Math.cos(angle) * radius;
         y += exp * Math.sin(angle) * radius;
     });
-    
-    return {x, y};
+
+    return { x, y };
 }
 
 function wilsonCoords(numerFactors, denomFactors) {
@@ -149,16 +149,16 @@ function wilsonCoords(numerFactors, denomFactors) {
             y -= baseCoords[factor].y;
         }
     });
-    return {x, y};
+    return { x, y };
 }
 
 function analyzeRatio(ratioStr) {
-    const {num, den} = parseRatio(ratioStr);
+    const { num, den } = parseRatio(ratioStr);
     const cents = ratioToCents(num, den);
     const numerFactors = primeFactorize(num);
     const denomFactors = primeFactorize(den);
     const primeVector = getPrimeVector(numerFactors, denomFactors);
-    
+
     return {
         ratio: ratioStr,
         numerator: num,
@@ -172,14 +172,14 @@ function analyzeRatio(ratioStr) {
 
 function ratioToLatticePoint(ratioStr) {
     const analyzed = analyzeRatio(ratioStr);
-    
+
     let coords;
     if (state.projectionType === 'orthogonal') {
         coords = orthogonalProjection(analyzed.primeVector);
     } else {
         coords = wilsonCoords(analyzed.numerFactors, analyzed.denomFactors);
     }
-    
+
     return {
         ...analyzed,
         coords
@@ -188,12 +188,12 @@ function ratioToLatticePoint(ratioStr) {
 
 function connectNodes(points) {
     const edges = [];
-    
+
     for (let i = 0; i < points.length; i++) {
         for (let j = i + 1; j < points.length; j++) {
             const p1 = points[i];
             const p2 = points[j];
-            
+
             if (state.strictConnections) {
                 const diff = vectorDifference(p1.primeVector, p2.primeVector);
                 if (isSinglePrimeStep(diff)) {
@@ -202,7 +202,7 @@ function connectNodes(points) {
             } else {
                 const allFactors1 = [...p1.numerFactors, ...p1.denomFactors].filter(f => f !== 2);
                 const allFactors2 = [...p2.numerFactors, ...p2.denomFactors].filter(f => f !== 2);
-                
+
                 const diff = Math.abs(allFactors1.length - allFactors2.length);
                 if (diff <= 1) {
                     edges.push([p1.coords, p2.coords]);
@@ -210,7 +210,7 @@ function connectNodes(points) {
             }
         }
     }
-    
+
     return edges;
 }
 
@@ -238,12 +238,12 @@ function calculateDimensionality(points) {
 }
 
 function mapToET(ratio, nET) {
-    const {num, den} = parseRatio(ratio);
+    const { num, den } = parseRatio(ratio);
     const cents = ratioToCents(num, den);
     const degree = nET * Math.log2(num / den);
     const rounded = Math.round(degree);
     const error = Math.abs(degree - rounded) * (1200 / nET);
-    
+
     return {
         degree: rounded,
         error: error,
@@ -256,16 +256,16 @@ function ratiosToLatticeData(ratioStrings) {
         .map(r => r.trim())
         .filter(r => r.length > 0)
         .map(r => ratioToLatticePoint(r));
-    
+
     if (points.length === 0) return null;
-    
+
     const coords = points.map(p => p.coords);
     const minX = Math.min(...coords.map(c => c.x));
     const maxX = Math.max(...coords.map(c => c.x));
     const minY = Math.min(...coords.map(c => c.y));
     const maxY = Math.max(...coords.map(c => c.y));
     const edges = connectNodes(points);
-    
+
     return {
         minX, maxX, minY, maxY,
         data: points,
@@ -279,18 +279,18 @@ function ratiosToLatticeData(ratioStrings) {
 
 function calculateIntervals() {
     if (!state.latticeData) return [];
-    
+
     const intervals = [];
     const points = state.latticeData.data;
-    
+
     for (let i = 0; i < points.length; i++) {
         for (let j = i + 1; j < points.length; j++) {
             const p1 = points[i];
             const p2 = points[j];
-            
+
             const intervalCents = Math.abs(p2.cents - p1.cents);
             const intervalRatio = `${p2.numerator * p1.denominator}/${p2.denominator * p1.numerator}`;
-            
+
             intervals.push({
                 from: p1.ratio,
                 to: p2.ratio,
@@ -299,17 +299,17 @@ function calculateIntervals() {
             });
         }
     }
-    
+
     return intervals.sort((a, b) => a.cents - b.cents);
 }
 
 function detectStructures() {
     if (!state.latticeData) return { triads: [], tetrads: [] };
-    
+
     const points = state.latticeData.data;
     const triads = [];
     const tetrads = [];
-    
+
     // Detectar tríadas (3 notas)
     for (let i = 0; i < points.length; i++) {
         for (let j = i + 1; j < points.length; j++) {
@@ -317,7 +317,7 @@ function detectStructures() {
                 const p1 = points[i], p2 = points[j], p3 = points[k];
                 const interval1 = Math.abs(p2.cents - p1.cents);
                 const interval2 = Math.abs(p3.cents - p2.cents);
-                
+
                 // Tríada mayor justa (5/4 + 6/5)
                 if (Math.abs(interval1 - 386) < 10 && Math.abs(interval2 - 316) < 10) {
                     triads.push({
@@ -325,7 +325,7 @@ function detectStructures() {
                         notes: [p1.ratio, p2.ratio, p3.ratio]
                     });
                 }
-                
+
                 // Tríada menor justa (6/5 + 5/4)
                 if (Math.abs(interval1 - 316) < 10 && Math.abs(interval2 - 386) < 10) {
                     triads.push({
@@ -336,21 +336,21 @@ function detectStructures() {
             }
         }
     }
-    
+
     // Detectar tetradas (4 notas)
     for (let i = 0; i < points.length; i++) {
         for (let j = i + 1; j < points.length; j++) {
             for (let k = j + 1; k < points.length; k++) {
                 for (let l = k + 1; l < points.length; l++) {
                     const p1 = points[i], p2 = points[j], p3 = points[k], p4 = points[l];
-                    
+
                     // Tetrada dominante 7 septimal (4:5:6:7)
                     const int1 = Math.abs(p2.cents - p1.cents);
                     const int2 = Math.abs(p3.cents - p2.cents);
                     const int3 = Math.abs(p4.cents - p3.cents);
-                    
-                    if (Math.abs(int1 - 386) < 10 && 
-                        Math.abs(int2 - 316) < 10 && 
+
+                    if (Math.abs(int1 - 386) < 10 &&
+                        Math.abs(int2 - 316) < 10 &&
                         Math.abs(int3 - 267) < 10) {
                         tetrads.push({
                             type: 'Dominante Septimal (4:5:6:7)',
@@ -361,13 +361,13 @@ function detectStructures() {
             }
         }
     }
-    
+
     return { triads, tetrads };
 }
 
 function exportToScala() {
     if (!state.latticeData) return;
-    
+
     const points = state.latticeData.data.sort((a, b) => a.cents - b.cents);
     let scalaContent = '! Scala file exported from Visualizador de Retículas\n';
     scalaContent += '! Generated: ' + new Date().toISOString() + '\n';
@@ -375,11 +375,11 @@ function exportToScala() {
     scalaContent += 'Exported scale\n';
     scalaContent += ` ${points.length}\n`;
     scalaContent += '!\n';
-    
+
     points.forEach(point => {
         scalaContent += ` ${point.ratio}\n`;
     });
-    
+
     const blob = new Blob([scalaContent], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -387,14 +387,14 @@ function exportToScala() {
     link.download = 'scale_' + new Date().toISOString().slice(0, 10) + '.scl';
     link.click();
     URL.revokeObjectURL(url);
-    
+
     // Cerrar modal de exportación
     document.getElementById('exportModal').classList.remove('active');
 }
 
 function exportToTxt() {
     if (!state.latticeData) return;
-    
+
     const points = state.latticeData.data.sort((a, b) => a.cents - b.cents);
     let txtContent = 'Visualizador de Retículas - Exportación de Escala\n';
     txtContent += 'Generado: ' + new Date().toLocaleString('es-ES') + '\n';
@@ -404,14 +404,14 @@ function exportToTxt() {
     txtContent += `Dimensionalidad: ${state.latticeData.dimensionality}\n\n`;
     txtContent += 'RATIO\t\tCENTS\t\tFACTORES\n';
     txtContent += '-'.repeat(60) + '\n';
-    
+
     points.forEach(point => {
         const numStr = point.numerFactors.filter(f => f !== 2).join('×') || '1';
         const denStr = point.denomFactors.filter(f => f !== 2).join('×');
         const factors = denStr ? `${numStr}/${denStr}` : numStr;
         txtContent += `${point.ratio}\t\t${Math.round(point.cents)}¢\t\t${factors}\n`;
     });
-    
+
     const blob = new Blob([txtContent], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -419,7 +419,7 @@ function exportToTxt() {
     link.download = 'escala_' + new Date().toISOString().slice(0, 10) + '.txt';
     link.click();
     URL.revokeObjectURL(url);
-    
+
     // Cerrar modal de exportación
     document.getElementById('exportModal').classList.remove('active');
 }
@@ -430,11 +430,12 @@ const canvas = document.getElementById('latticeCanvas');
 const ctx = canvas.getContext('2d');
 
 function getColorForScheme(scheme) {
-    switch(scheme) {
+    const styles = getComputedStyle(document.body);
+    switch (scheme) {
         case 'rainbow': return ['#667eea', '#764ba2', '#f093fb', '#4facfe'];
         case 'warm': return ['#f093fb', '#f5576c', '#ff9a56'];
         case 'cool': return ['#4facfe', '#00f2fe', '#43e97b'];
-        default: return ['#ffffff'];
+        default: return [styles.getPropertyValue('--text-main').trim()];
     }
 }
 
@@ -446,15 +447,16 @@ function drawLattice() {
     canvas.width = rect.width * dpr;
     canvas.height = rect.height * dpr;
     ctx.scale(dpr, dpr);
-    
+
     const width = rect.width;
     const height = rect.height;
 
     // Fondo según tema
-    ctx.fillStyle = state.theme === 'dark' ? '#0a0a0a' : '#ffffff';
+    const styles = getComputedStyle(document.body);
+    ctx.fillStyle = styles.getPropertyValue('--bg-main').trim();
     ctx.fillRect(0, 0, width, height);
 
-    const {data, edges, minX, maxX, minY, maxY} = state.latticeData;
+    const { data, edges, minX, maxX, minY, maxY } = state.latticeData;
     const xLength = Math.abs(minX - maxX) || 1;
     const yLength = Math.abs(minY - maxY) || 1;
     const cx = width / 2;
@@ -469,8 +471,7 @@ function drawLattice() {
 
     // Cuadrícula
     if (state.showGrid) {
-        ctx.strokeStyle = state.theme === 'dark' ? 
-            'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.15)';
+        ctx.strokeStyle = styles.getPropertyValue('--grid-color').trim();
         ctx.lineWidth = 0.15 / zoom;
         const gridSize = 10;
         for (let x = Math.floor(minX / gridSize) * gridSize; x <= maxX + gridSize; x += gridSize) {
@@ -490,13 +491,13 @@ function drawLattice() {
     // Conexiones
     if (state.showConnections) {
         const colors = getColorForScheme(state.colorScheme);
-        
+
         // Ajustar colores según tema si es esquema blanco
         let lineColors = colors;
         if (state.colorScheme === 'white' && state.theme === 'light') {
             lineColors = ['#666666']; // Gris oscuro en tema claro
         }
-        
+
         ctx.lineWidth = state.lineWidth / zoom;
         edges.forEach((edge, i) => {
             const [c1, c2] = edge;
@@ -512,18 +513,18 @@ function drawLattice() {
     // Puntos
     const colors = getColorForScheme(state.colorScheme);
     let pointColors = colors;
-    if (state.colorScheme === 'white' && state.theme === 'light') {
-        pointColors = ['#333333']; // Puntos oscuros en tema claro
-    }
-    
+    // Removed manual override for white scheme in light mode as it is now handled by CSS variable in getColorForScheme
+
     data.forEach((point, i) => {
         const colorIndex = i % pointColors.length;
         ctx.fillStyle = pointColors[colorIndex];
         ctx.beginPath();
         ctx.arc(point.coords.x, point.coords.y, state.pointSize / zoom, 0, Math.PI * 2);
         ctx.fill();
-        
-        ctx.strokeStyle = state.theme === 'dark' ? '#000' : '#fff';
+
+        ctx.fill();
+
+        ctx.strokeStyle = styles.getPropertyValue('--bg-main').trim();
         ctx.lineWidth = 0.5 / zoom;
         ctx.stroke();
     });
@@ -533,7 +534,7 @@ function drawLattice() {
         ctx.font = `${state.textSize / zoom}px Arial`;
         ctx.textAlign = 'left';
         ctx.textBaseline = 'middle';
-        
+
         data.forEach(point => {
             let label;
             if (state.textType === 'factors') {
@@ -545,9 +546,8 @@ function drawLattice() {
             } else {
                 label = point.ratio;
             }
-            
-            ctx.fillStyle = state.theme === 'dark' ? 
-                'rgba(0, 0, 0, 0.7)' : 'rgba(255, 255, 255, 0.9)';
+
+            ctx.fillStyle = styles.getPropertyValue('--panel-bg').trim();
             const metrics = ctx.measureText(label);
             const padding = 1 / zoom;
             ctx.fillRect(
@@ -556,8 +556,8 @@ function drawLattice() {
                 metrics.width + padding * 2,
                 state.textSize / zoom + padding * 2
             );
-            
-            ctx.fillStyle = state.theme === 'dark' ? '#fff' : '#000';
+
+            ctx.fillStyle = styles.getPropertyValue('--text-main').trim();
             ctx.fillText(label, point.coords.x + 3 / zoom, point.coords.y);
         });
     }
@@ -590,26 +590,26 @@ function init() {
 
 function analyzeET() {
     if (!state.latticeData) return;
-    
+
     const etSystems = [12, 19, 22, 24, 31, 41, 53];
     let html = '<div style="color: #333;">';
-    
+
     state.latticeData.data.forEach(point => {
         html += `<div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">`;
         html += `<strong style="color: #7e22ce; font-size: 16px;">${point.ratio}</strong> (${Math.round(point.cents)}¢)<br>`;
         html += `<div style="margin-top: 10px; font-size: 13px;">`;
-        
+
         etSystems.forEach(et => {
             const mapping = mapToET(point.ratio, et);
-            const errorStr = mapping.error < 5 ? 
+            const errorStr = mapping.error < 5 ?
                 `<span style="color: #059669;">±${mapping.error.toFixed(2)}¢</span>` :
                 `<span style="color: #dc2626;">±${mapping.error.toFixed(2)}¢</span>`;
             html += `${et}-ET: grado ${mapping.degree} ${errorStr}<br>`;
         });
-        
+
         html += `</div></div>`;
     });
-    
+
     html += '</div>';
     document.getElementById('etResults').innerHTML = html;
     document.getElementById('etModal').classList.add('active');
@@ -617,12 +617,12 @@ function analyzeET() {
 
 function showIntervalTable() {
     const intervals = calculateIntervals();
-    
+
     let html = '<div style="color: #333; max-height: 500px; overflow-y: auto;">';
     html += '<table class="interval-table">';
     html += '<thead><tr><th>Desde</th><th>Hasta</th><th>Cents</th><th>Ratio</th></tr></thead>';
     html += '<tbody>';
-    
+
     intervals.forEach(interval => {
         html += `<tr>
             <td>${interval.from}</td>
@@ -631,7 +631,7 @@ function showIntervalTable() {
             <td>${interval.ratio}</td>
         </tr>`;
     });
-    
+
     html += '</tbody></table></div>';
     document.getElementById('intervalResults').innerHTML = html;
     document.getElementById('intervalModal').classList.add('active');
@@ -639,9 +639,9 @@ function showIntervalTable() {
 
 function showStructures() {
     const { triads, tetrads } = detectStructures();
-    
+
     let html = '<div style="color: #333;">';
-    
+
     if (triads.length > 0) {
         html += '<div class="analysis-section">';
         html += '<h3>Tríadas Detectadas</h3>';
@@ -654,7 +654,7 @@ function showStructures() {
         });
         html += '</ul></div>';
     }
-    
+
     if (tetrads.length > 0) {
         html += '<div class="analysis-section">';
         html += '<h3>Tetradas Detectadas</h3>';
@@ -667,20 +667,29 @@ function showStructures() {
         });
         html += '</ul></div>';
     }
-    
+
     if (triads.length === 0 && tetrads.length === 0) {
         html += '<p style="padding: 20px; text-align: center; color: #666;">No se detectaron estructuras armónicas comunes en esta escala.</p>';
     }
-    
+
     html += '</div>';
     document.getElementById('structureResults').innerHTML = html;
     document.getElementById('structureModal').classList.add('active');
 }
 
 // ===== TOGGLE TEMA =====
+// ===== TOGGLE TEMA =====
 function toggleTheme() {
-    state.theme = state.theme === 'dark' ? 'light' : 'dark';
-    document.body.className = state.theme;
+    const body = document.body;
+    if (body.classList.contains('light')) {
+        body.classList.remove('light');
+        body.classList.add('dark');
+        state.theme = 'dark';
+    } else {
+        body.classList.remove('dark');
+        body.classList.add('light');
+        state.theme = 'light';
+    }
     document.getElementById('themeToggle').textContent = state.theme === 'dark' ? 'OSCURO' : 'CLARO';
     drawLattice();
 }
@@ -693,7 +702,7 @@ document.getElementById('themeToggle').addEventListener('click', toggleTheme);
 document.getElementById('advancedHeader').addEventListener('click', () => {
     const content = document.getElementById('advancedContent');
     const icon = document.querySelector('#advancedHeader .expand-icon');
-    
+
     if (content.classList.contains('expanded')) {
         content.classList.remove('expanded');
         icon.classList.remove('expanded');
@@ -874,15 +883,15 @@ canvas.addEventListener('wheel', (e) => {
     const rect = canvas.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
-    
+
     const oldZoom = state.zoom;
     const delta = e.deltaY > 0 ? 0.9 : 1.1;
     state.zoom = Math.max(0.2, Math.min(2, state.zoom * delta));
-    
+
     const zoomRatio = state.zoom / oldZoom;
     state.panX = mouseX - (mouseX - state.panX) * zoomRatio;
     state.panY = mouseY - (mouseY - state.panY) * zoomRatio;
-    
+
     document.getElementById('zoomSlider').value = Math.round(state.zoom * 100);
     document.getElementById('zoomValue').textContent = Math.round(state.zoom * 100) + '%';
     drawLattice();
